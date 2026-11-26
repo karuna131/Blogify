@@ -1,22 +1,35 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/userSchema");
+const User = require("../models/User");
 
 const userAuth = async (req, res, next) => {
-  try {
-    const token = req.header("Authorization").replace("Bearer ", "");
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findOne({ _id: decoded._id, "tokens.token": token });
+    try {
+        const authHeader = req.header("Authorization");
 
-    if (!user) {
-      throw new Error("User not found");
+        if (!authHeader) {
+            return res.status(401).json({
+                message: "Please authenticate."
+            });
+        }
+
+        const token = authHeader.replace("Bearer ", "");
+        const decoded = jwt.verify(token, process.env.Secret_Key);
+        const user = await User.findById(decoded.userId);
+
+        if (!user) {
+            return res.status(401).json({
+                message: "User not found."
+            });
+        }
+
+        req.user = user;
+        req.token = token;
+
+        next();
+    } catch (error) {
+        return res.status(401).json({
+            message: "Please authenticate."
+        });
     }
-
-    req.user = user;
-    req.token = token;
-    next();
-  } catch (error) {
-    res.status(401).send({ error: "Please authenticate." });
-  }
 };
 
 module.exports = userAuth;
