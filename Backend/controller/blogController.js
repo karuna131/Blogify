@@ -3,19 +3,34 @@ const Blog = require("../models/blogSchema");
 const createBlog = async (req, res) => {
     try {
         const { title, content } = req.body;
+
         if (!title || !content) {
-            return res.status(400).json({ message: "Please enter title and content" });
+            return res.status(400).json({
+                message: "Please enter title and content"
+            });
         }
+
         if (title.length < 3) {
-            return res.status(400).json({ message: "Title must be at least 3 characters" });
+            return res.status(400).json({
+                message: "Title must be at least 3 characters"
+            });
         }
-        const blog = await Blog.create({ title, content });
+
+        const blog = await Blog.create({
+            title,
+            content,
+            author: req.user._id
+        });
+
         res.status(201).json({
             message: "Blog created successfully",
             blog
         });
+
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        res.status(500).json({
+            message: error.message
+        });
     }
 };
 
